@@ -58,7 +58,7 @@
 #define           UA_ANALOG_INPUT_PIN                 0             /* Analog input for lambda.*/
 
 //Define adjustable parameters.
-#define           SERIAL_RATE                         1             /* Serial refresh rate in HZ (1-100)*/                           
+#define           SERIAL_RATE                         20             /* Serial refresh rate in HZ (1-100)*/                           
 #define           UBAT_MIN                            150           /* Minimum voltage (ADC value) on Ubat to operate */
 
 //Global variables.
@@ -370,8 +370,8 @@ void start() {
 
     //Error handling.
     if (CJ125_Status != CJ125_DIAG_REG_STATUS_OK) {
-      Serial.print("Error, CJ125: 0x");
-      Serial.print(CJ125_Status, HEX);
+      Serial.print("Error, CJ125: 0b");
+      Serial.print(CJ125_Status, BIN);
       Serial.print("\n\r");
       digitalWrite(LED_STATUS_POWER, !digitalRead(LED_STATUS_POWER));
     }
@@ -540,7 +540,7 @@ void loop() {
     UpdateAnalogOutput();
 
     //Display information if no errors is reported.
-    if (CJ125_Status == CJ125_DIAG_REG_STATUS_OK) {
+    if (true){// (CJ125_Status == CJ125_DIAG_REG_STATUS_OK) {
       
       //Assembled data.
       String txString = "Measuring, CJ125: 0x";
