@@ -1,0 +1,6 @@
+{
+    "board": "arduino:avr:uno",
+    "sketch": "Lambda_Shield_2_Example.ino",
+    "output": "../build",
+    "port": "COM6"
+}

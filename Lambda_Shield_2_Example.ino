@@ -44,14 +44,16 @@
 #define           CJ125_DIAG_REG_STATUS_NOSENSOR      0x287F        /* The response of the diagnostic register when no sensor is connected. */
 #define           CJ125_INIT_REG1_STATUS_0            0x2888        /* The response of the init register when V=8 amplification is in use. */
 #define           CJ125_INIT_REG1_STATUS_1            0x2889        /* The response of the init register when V=17 amplification is in use. */
+#define           DACMASK                            0b0011000000000000
 
 //Define pin assignments.
 #define           CJ125_NSS_PIN                       10            /* Pin used for chip select in SPI communication. */
-#define           LED_STATUS_POWER                    7             /* Pin used for power the status LED, indicating we have power. */
-#define           LED_STATUS_HEATER                   6             /* Pin used for the heater status LED, indicating heater activity. */
-#define           HEATER_OUTPUT_PIN                   5             /* Pin used for the PWM output to the heater circuit. */
+#define           DAC_NSS_PIN                         A2            /* Pin used for chip select in SPI communication. */
+#define           LED_STATUS_POWER                    A4             /* Pin used for power the status LED, indicating we have power. */
+#define           LED_STATUS_HEATER                   A5             /* Pin used for the heater status LED, indicating heater activity. */
+#define           HEATER_OUTPUT_PIN                   6             /* Pin used for the PWM output to the heater circuit. */
 #define           ANALOG_OUTPUT_PIN                   3             /* Pin used for the PWM to the 0-1V analog output. */
-#define           UB_ANALOG_INPUT_PIN                 2             /* Analog input for power supply.*/
+#define           UB_ANALOG_INPUT_PIN                 3             /* Analog input for power supply.*/
 #define           UR_ANALOG_INPUT_PIN                 1             /* Analog input for temperature.*/
 #define           UA_ANALOG_INPUT_PIN                 0             /* Analog input for lambda.*/
 
@@ -213,12 +215,12 @@ int Heater_PID_Control(int input) {
   
 }
 
-//Displays the AFR value on an external narrowband lambda gauge with an (RC-filtered) 0-1V PWM signal from ANALOG_OUTPUT_PIN. 0V = AFR 20.00. 1V = AFR 10.00.
+//Displays the AFR value on an external narrowband lambda gauge with an (RC-filtered) 0-5V 12bit DAC. 0V = AFR 20.00. 5V = AFR 10.00.
 void UpdateAnalogOutput() {
 
   //Local constants.
   const float AirFuelRatioOctane = 14.70;
-  const int maximumOutput = 51; /* 1V */
+  const int maximumOutput = 0xfff; /* 5V */
   const int minimumOutput = 0;  /* 0V */
 
   //Local variables.
@@ -232,8 +234,11 @@ void UpdateAnalogOutput() {
   if (analogOutput > maximumOutput) analogOutput = maximumOutput;
   if (analogOutput < minimumOutput) analogOutput = minimumOutput;
   
-  //Set PWM output.
-  analogWrite(ANALOG_OUTPUT_PIN, analogOutput);
+  digitalWrite(DAC_NSS_PIN, LOW);
+
+  SPI.transfer16(analogOutput | DACMASK);
+  digitalWrite(DAC_NSS_PIN, HIGH);
+  
 }
 
 //Lookup Lambda Value.
@@ -309,20 +314,22 @@ void logData(String logString) {
 void setup() {
   
   //Set up serial communication.
-  Serial.begin(9600);
+  Serial.begin(115200);
 
   //Set up SPI.
   SPI.begin();  /* Note, SPI will disable the bult in LED. */
   SPI.setBitOrder(MSBFIRST);
 
   //Set up digital output pins.
-  pinMode(CJ125_NSS_PIN, OUTPUT);  
+  pinMode(CJ125_NSS_PIN, OUTPUT);
+  pinMode(DAC_NSS_PIN, OUTPUT); 
   pinMode(LED_STATUS_POWER, OUTPUT);
   pinMode(LED_STATUS_HEATER, OUTPUT);
   pinMode(HEATER_OUTPUT_PIN, OUTPUT);
 
   //Set initial values.
   digitalWrite(CJ125_NSS_PIN, HIGH);
+  digitalWrite(DAC_NSS_PIN, HIGH);
   digitalWrite(LED_STATUS_POWER, LOW);
   digitalWrite(LED_STATUS_HEATER, LOW);
   analogWrite(HEATER_OUTPUT_PIN, 0); /* PWM is initially off. */
@@ -366,6 +373,7 @@ void start() {
       Serial.print("Error, CJ125: 0x");
       Serial.print(CJ125_Status, HEX);
       Serial.print("\n\r");
+      digitalWrite(LED_STATUS_POWER, !digitalRead(LED_STATUS_POWER));
     }
     
     //Read input voltage.
