@@ -69,7 +69,7 @@ int adcValue_UA_Optimal = 0;                                        /* UA ADC va
 int adcValue_UR_Optimal = 0;                                        /* UR ADC value stored when CJ125 is in calibration mode, optimal temperature */
 int HeaterOutput = 0;                                               /* Current PWM output value (0-255) of the heater output pin */
 int serial_counter = 0;                                             /* Counter used to calculate refresh rate on the serial output */
-int CJ125_Status = 0;                                               /* Latest stored DIAG registry response from the CJ125 */
+uint16_t CJ125_Status = 0;                                               /* Latest stored DIAG registry response from the CJ125 */
 bool logEnabled = false;                                            /* Variable used for setting data logging enable or disabled. */
 
 
@@ -370,8 +370,8 @@ void start() {
 
     //Error handling.
     if (CJ125_Status != CJ125_DIAG_REG_STATUS_OK) {
-      Serial.print("Error, CJ125: 0b");
-      Serial.print(CJ125_Status, BIN);
+      Serial.print("Error, CJ125: 0x");
+      Serial.print(CJ125_Status, HEX);
       Serial.print("\n\r");
       digitalWrite(LED_STATUS_POWER, !digitalRead(LED_STATUS_POWER));
     }
@@ -540,7 +540,7 @@ void loop() {
     UpdateAnalogOutput();
 
     //Display information if no errors is reported.
-    if (true){// (CJ125_Status == CJ125_DIAG_REG_STATUS_OK) {
+    if (CJ125_Status == CJ125_DIAG_REG_STATUS_OK) {
       
       //Assembled data.
       String txString = "Measuring, CJ125: 0x";
