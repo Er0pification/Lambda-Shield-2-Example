@@ -58,7 +58,7 @@
 #define           UA_ANALOG_INPUT_PIN                 0             /* Analog input for lambda.*/
 
 //Define adjustable parameters.
-#define           SERIAL_RATE                         20             /* Serial refresh rate in HZ (1-100)*/                           
+#define           SERIAL_RATE                         30            /* Serial refresh rate in HZ (1-100)*/                           
 #define           UBAT_MIN                            150           /* Minimum voltage (ADC value) on Ubat to operate */
 
 //Global variables.
